@@ -43,5 +43,7 @@
         bbe
       ];
     };
-  });
+  }) // {
+    nixosModules.rosetta-spice = import ./nixos;
+  };
 }

@@ -1,5 +1,9 @@
 let
-  pkgs = import ../nixpkgs.nix;
+  flake = (import ../flake-compat.nix).defaultNix;
+  pkgs = import flake.inputs.nixpkgs.outPath {
+    overlays = [];
+  };
+
   linux = pkgs.linuxPackages_latest.kernel;
 in pkgs.runCommand "linux-nolibc-${linux.version}" {
   inherit (linux) src;
