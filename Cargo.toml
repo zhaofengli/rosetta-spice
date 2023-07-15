@@ -1,0 +1,15 @@
+[package]
+name = "rosetta-spice"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.71"
+clap = { version = "4.3.12", features = ["derive"] }
+goblin = "0.7.1"
+lazy_static = "1.4.0"
+libc = "0.2.147"
+plain = "0.2.3"
+tempfile = "3.6.0"
