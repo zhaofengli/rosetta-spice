@@ -10,5 +10,4 @@ runCommandCC "${rosetta.name}-patched" {
       rosetta-spice "${rosetta}/bin/$bin" "$out/bin/$bin"
     fi
   done
-  chmod +x $out/bin/*
 ''

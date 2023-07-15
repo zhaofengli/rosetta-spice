@@ -3,7 +3,7 @@ mod assembly;
 use std::env;
 use std::fs::{self, File};
 use std::io::{self, Read, Seek, SeekFrom, Write};
-use std::os::unix::prelude::MetadataExt;
+use std::os::unix::fs::{MetadataExt, PermissionsExt};
 
 use anyhow::{anyhow, Context, Result as AnyResult};
 use goblin::elf64::{
@@ -69,10 +69,17 @@ fn main() -> AnyResult<()> {
         .write(true)
         .create(true)
         .truncate(true)
-        .open(dst_path)
+        .open(&dst_path)
         .context("Failed to open destination")?;
 
     patch_rosetta(&mut src, &mut dst)?;
+
+    if let Ok(metadata) = dst.metadata() {
+        let mut permissions = metadata.permissions();
+        let mode = permissions.mode() | 0o111;
+        permissions.set_mode(mode);
+        fs::set_permissions(dst_path, permissions)?;
+    }
 
     Ok(())
 }
