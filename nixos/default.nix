@@ -45,6 +45,20 @@ in {
     };
   };
   config = lib.mkIf cfg.enable (lib.mkMerge [
+    {
+      assertions = [
+        {
+          assertion = config.virtualisation.rosetta.enable;
+          message = "virtualisation.rosetta-spice requires virtualisation.rosetta.enable";
+        }
+      ];
+
+      virtualisation.rosetta.enable = lib.mkDefault true;
+      boot.binfmt.registrations.rosetta = {
+        interpreter = lib.mkForce "${rosettaPath}/rosetta";
+      };
+    }
+
     # Patch mounted Rosetta
     (lib.mkIf (cfg.rosettaPkg == null) {
       systemd.services.rosetta-spice = {
@@ -67,12 +81,13 @@ in {
             /run/current-system/sw/bin/systemctl start --no-block rosettad.service
           '');
         };
-        path = [ cfg.package pkgs.gcc ];
+        path = [ cfg.package pkgs.gcc pkgs.coreutils ];
         script = ''
           set -euo pipefail
           for bin in rosetta rosettad; do
             if [[ -f "${rosettaMountpoint}/$bin" ]]; then
-              rosetta-spice "${rosettaMountpoint}/$bin" "$RUNTIME_DIRECTORY/$bin"
+              rosetta-spice "${rosettaMountpoint}/$bin" "$RUNTIME_DIRECTORY/$bin.tmp"
+              mv "$RUNTIME_DIRECTORY/$bin.tmp" "$RUNTIME_DIRECTORY/$bin"
             fi
           done
         '';
