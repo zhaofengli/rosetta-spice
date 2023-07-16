@@ -62,24 +62,18 @@ in {
     # Patch mounted Rosetta
     (lib.mkIf (cfg.rosettaPkg == null) {
       systemd.services.rosetta-spice = {
-        wantedBy = [ "multi-user.target" ];
+        wantedBy = [ "sysinit.target" ];
+        after = [ "local-fs.target" ((lib.replaceStrings [ "/" ] [ "-" ] rosettaMountpoint) + ".mount") ];
         before = [ "systemd-binfmt.service" ]
           ++ lib.optional cfg.enableAot "rosettad.service";
-        conflicts = [ "systemd-binfmt.service" ]
-          ++ lib.optional cfg.enableAot "rosettad.service";
-        after = [ ((lib.replaceStrings [ "/" ] [ "-" ] rosettaMountpoint) + ".mount") ];
+        unitConfig = {
+          DefaultDependencies = false;
+        };
         serviceConfig = {
           Type = "oneshot";
           RuntimeDirectory = "rosetta-spice";
           RuntimeDirectoryMode = "0755";
           RuntimeDirectoryPreserve = true;
-
-          # HACK
-          ExecStopPost = pkgs.writeShellScript "start-binfmt" (''
-            /run/current-system/sw/bin/systemctl start --no-block systemd-binfmt.service
-          '' + lib.optionalString cfg.enableAot ''
-            /run/current-system/sw/bin/systemctl start --no-block rosettad.service
-          '');
         };
         path = [ cfg.package pkgs.gcc pkgs.coreutils ];
         script = ''
@@ -90,6 +84,16 @@ in {
               mv "$RUNTIME_DIRECTORY/$bin.tmp" "$RUNTIME_DIRECTORY/$bin"
             fi
           done
+
+          if /run/current-system/systemd/bin/systemctl -q is-active systemd-binfmt.service; then
+            >&2 echo "Restarting systemd-binfmt"
+            /run/current-system/systemd/bin/systemctl restart --no-block systemd-binfmt.service
+          fi
+        '' + lib.optionalString cfg.enableAot ''
+          if /run/current-system/systemd/bin/systemctl -q is-active rosettad.service; then
+            >&2 echo "Restarting rosettad"
+            /run/current-system/systemd/bin/systemctl restart --no-block rosettad.service
+          fi
         '';
       };
     })
