@@ -1,11 +1,14 @@
 { lib, stdenv, fetchurl, p7zip }:
 let
   # https://swscan.apple.com/content/catalogs/others/index-rosettaupdateauto-1.sucatalog.gz
-  version = "23A5286i";
+
+  # Sonoma Beta 4
+  version = "23A5301g";
   src = fetchurl {
-    url = "https://swcdn.apple.com/content/downloads/46/17/042-13875-A_LVTMS3RTZV/wyr9cfk0a3q54xh5ros73kzipultu2inkd/RosettaUpdateAuto.pkg";
-    hash = "sha256-5XbXWnV6uZBdGo72ZWoRohnkCwOU76xKOHgirV0qwOM=";
+    url = "https://swcdn.apple.com/content/downloads/02/25/042-16906-A_6N49RSTBN4/38f7ijbgxskd1v7njzvkz20e5mcc4nzq6l/RosettaUpdateAuto.pkg";
+    hash = "sha256-zzgBMdt06KCqA6lYqcvFrsFbxMVf7rd5tT6fYV9YqWE=";
   };
+
   drv = stdenv.mkDerivation {
     pname = "rosetta";
     inherit version src;
