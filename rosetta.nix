@@ -2,11 +2,11 @@
 let
   # https://swscan.apple.com/content/catalogs/others/index-rosettaupdateauto-1.sucatalog.gz
 
-  # Sonoma Beta 4
-  version = "23A5301g";
+  # Sonoma Beta 4 (Release 2)
+  version = "23A5301h";
   src = fetchurl {
-    url = "https://swcdn.apple.com/content/downloads/02/25/042-16906-A_6N49RSTBN4/38f7ijbgxskd1v7njzvkz20e5mcc4nzq6l/RosettaUpdateAuto.pkg";
-    hash = "sha256-zzgBMdt06KCqA6lYqcvFrsFbxMVf7rd5tT6fYV9YqWE=";
+    url = "https://swcdn.apple.com/content/downloads/02/02/042-25565-A_7EXCGPSTS4/rmx0939ot0p4ussy957lns3cupaqwx76qx/RosettaUpdateAuto.pkg";
+    hash = "sha256-G6ObxeJBFnZ8sZtwayYpKO12J86/kcnhGAG/JLbXh6g=";
   };
 
   drv = stdenv.mkDerivation {
