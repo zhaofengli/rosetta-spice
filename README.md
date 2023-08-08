@@ -5,6 +5,7 @@
 - Enables AOT caching without [involvement](https://developer.apple.com/documentation/virtualization/running_intel_binaries_in_linux_vms_with_rosetta#4239539) of the virtualization app
     - This requires the RosettaLinux version from Sonoma
 - Fixes segfaults when running patched binaries (https://github.com/NixOS/nixpkgs/issues/209242)
+    - No longer needed since Sonoma Beta 5 (23A5312d)!
 - Allows the use of another RosettaLinux version than what's supplied by the host
 
 ## Notes
