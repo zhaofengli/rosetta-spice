@@ -8,6 +8,36 @@
     - No longer needed since Sonoma Beta 5 (23A5312d)!
 - Allows the use of another RosettaLinux version than what's supplied by the host
 
+## Usage
+Enable the NixOS module on the guest VM. The host MacOS machine does not need modification.
+
+### Example System Flake
+
+The NixOS module can be enabled on an `aarch64-linux` NixOS virtual machine via a configuration similar to the following:
+
+```nix
+{
+  description = "System Configuration";
+
+  inputs = {
+     (...other inputs here...)
+     rosetta-spice.url = "github:zhaofengli/rosetta-spice";
+  };
+
+  outputs = {rosetta-spice, ...}: {
+    nixosConfiguration = {
+      myHost = lib.nixosSystem {
+        modules =
+          [
+            rosetta-spice.nixosModules.rosetta-spice
+            (...other modules here...)
+          ];
+      };
+    };
+  };
+}  
+```
+
 ## Notes
 
 This tool does _not_ bypass the licensing check.
