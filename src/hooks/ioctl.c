@@ -12,5 +12,10 @@ int64_t my_ioctl(int fd, unsigned long req, void *value) {
 		return 1;
 	}
 
+	if (req == _IOC(_IOC_READ, 0x61, 0x25, 0x45)) {
+		strncpy(value, "Our hard work\nby these words guarded\nplease don't steal\n\u00A9 Apple Inc", 0x45);
+		return 1;
+	}
+
 	return sys_ioctl(fd, req, value);
 }
