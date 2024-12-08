@@ -2,11 +2,11 @@
 let
   # https://swscan.apple.com/content/catalogs/others/index-rosettaupdateauto-1.sucatalog.gz
 
-  # Sonoma Beta 5
-  version = "23A5312d";
+  # Sequoia 15.2 Beta 3
+  version = "24C5079e";
   src = fetchurl {
-    url = "https://swcdn.apple.com/content/downloads/53/07/042-27173-A_8ILCIMG702/13kfaoxmyw0zoxtn2hbhdq7kmlsru6998r/RosettaUpdateAuto.pkg";
-    hash = "sha256-8YbvuB2n2o5hByDkx3WilunnCK4jKzv/oBhK6Eyg5ew=";
+    url = "https://swcdn.apple.com/content/downloads/38/30/072-18030-A_FANJVJ91EE/eeicx7eyga9aqrh2b3uif0yxqw7rn8dfuw/RosettaUpdateAuto.pkg";
+    hash = "sha256-rmShRTbhbMf+mKsQiKMss8uspnudnPeuxukcqCDY2wc=";
   };
 
   drv = stdenv.mkDerivation {
