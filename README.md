@@ -9,7 +9,7 @@
 - Allows the use of another RosettaLinux version than what's supplied by the host
 
 ## Usage
-Enable the NixOS module on the guest VM. The host MacOS machine does not need modification.
+Enable the NixOS module on the guest VM. The host macOS machine does not need modification.
 
 ### Example System Flake
 
@@ -40,8 +40,11 @@ The NixOS module can be enabled on an `aarch64-linux` NixOS virtual machine via 
 
 ## Notes
 
-This tool does _not_ bypass the licensing check.
-You must mount the Rosetta share at `/run/rosetta` for this to work.
-To quote the original message:
+You must either mount the Rosetta share at `/run/rosetta` or use [this patchset](https://patchwork.kernel.org/project/linux-arm-kernel/cover/20240411-tso-v1-0-754f11abfbff@marcan.st/) for this to work.
+In both cases, a 4K kernel is required.
 
-> Rosetta is only intended to run on Apple Silicon with a macOS host using Virtualization.framework with Rosetta mode enabled
+As of 24C5079e, RosettaLinux attempts to enable per-thread TSO with the following:
+
+- `prctl(0x4d4d444c /* PR_SET_MEM_MODEL */, 0x1, 0, 0, 0)`, defined in [this proposed patchset](https://patchwork.kernel.org/project/linux-arm-kernel/cover/20240411-tso-v1-0-754f11abfbff@marcan.st/) shipped with Asahi Linux
+- `ioctl(fd, _IOC(_IOC_NONE, 0x61, 0x24, 0), 0)` on the virtfs-mounted `rosetta` binary
+
