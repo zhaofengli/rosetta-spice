@@ -13,7 +13,6 @@ use goblin::elf64::{
 use plain::Plain;
 
 const EH_LEN: usize = 0x40;
-const OPENAT_BIN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/openat.bin"));
 const IOCTL_BIN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/ioctl.bin"));
 const MMAP_BIN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/mmap.bin"));
 
@@ -161,16 +160,6 @@ fn patch_rosetta(src: &mut File, dst: &mut File) -> AnyResult<()> {
         let offset = EH_LEN + ph_len + idx * 4;
 
         match instruction {
-            // mov x8, __NR_openat
-            [0x08, 0x07, 0x80, 0xd2] => {
-                if let Some((_, SVR_0)) = iter.next() {
-                    eprintln!("🪝 Hooking sys_openat");
-                    if let Some(patch) = try_patch(offset, OPENAT_BIN)? {
-                        patches.push(patch);
-                    }
-                }
-            }
-
             // mov x8, __NR_ioctl
             [0xa8, 0x03, 0x80, 0xd2] => {
                 if let Some((_, SVR_0)) = iter.next() {

@@ -2,7 +2,7 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-const HOOKS: &[&str] = &["openat", "ioctl", "mmap"];
+const HOOKS: &[&str] = &["ioctl", "mmap"];
 
 fn main() {
     println!("cargo:rerun-if-changed=vendor");
