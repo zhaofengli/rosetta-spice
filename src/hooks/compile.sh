@@ -35,6 +35,7 @@ set -x
 	-O2 \
 	-Wl,-T,"${base}/hook.ld" \
 	-Wl,--no-warn-rwx-segments \
+	-Wl,--no-dynamic-linker \
 	-I"${base}/../../vendor/nolibc" \
 	-o "$obj" "$src"
 "$OBJCOPY" -O binary "$obj" "$dst"
