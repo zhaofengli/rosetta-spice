@@ -14,7 +14,12 @@
     # System types to support.
     supportedSystems = [ "aarch64-linux" ];
   in flake-utils.lib.eachSystem supportedSystems (system: let
-    pkgs = nixpkgs.legacyPackages.${system};
+    pkgs = import nixpkgs {
+      inherit system;
+      overlays = [
+        self.overlays.rosetta-spice-extras
+      ];
+    };
     inherit (pkgs) lib;
 
     patchRosetta = pkgs.callPackage ./patch-rosetta.nix {
@@ -34,6 +39,10 @@
       rosetta = patchRosetta rosetta-orig;
     };
 
+    legacyPackages = {
+      inherit (pkgs) rosetta-spice-extras;
+    };
+
     devShell = pkgs.mkShell {
       nativeBuildInputs = with pkgs; [
         rustc cargo rustfmt clippy
@@ -45,5 +54,7 @@
     };
   }) // {
     nixosModules.rosetta-spice = import ./nixos;
+
+    overlays.rosetta-spice-extras = import ./pkgs/overlay.nix;
   };
 }
