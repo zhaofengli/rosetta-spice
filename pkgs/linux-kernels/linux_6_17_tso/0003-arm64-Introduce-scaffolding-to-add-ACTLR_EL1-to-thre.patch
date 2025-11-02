@@ -1,0 +1,141 @@
+From ace6f8cfddc5957de719d9dec8b0edee2b3c6c5c Mon Sep 17 00:00:00 2001
+From: Hector Martin <marcan@marcan.st>
+Date: Thu, 11 Apr 2024 09:51:22 +0900
+Subject: [PATCH 3/5] arm64: Introduce scaffolding to add ACTLR_EL1 to thread
+ state
+
+Some CPUs expose IMPDEF features in ACTLR_EL1 that can be meaningfully
+controlled per-thread (like TSO control on Apple cores). Add the basic
+scaffolding to save/restore this register as part of context switching.
+
+This mechanism is disabled by default both by config symbol and via a
+runtime check, which ensures it is never triggered unless the system is
+known to need it for some feature (which also implies that the layout of
+ACTLR_EL1 is uniform between all CPU core types).
+
+Signed-off-by: Hector Martin <marcan@marcan.st>
+Reviewed-by: Neal Gompa <neal@gompa.dev>
+---
+ arch/arm64/Kconfig                  |  3 +++
+ arch/arm64/include/asm/cpufeature.h |  5 +++++
+ arch/arm64/include/asm/processor.h  |  3 +++
+ arch/arm64/kernel/process.c         | 25 +++++++++++++++++++++++++
+ arch/arm64/kernel/setup.c           |  8 ++++++++
+ 5 files changed, 44 insertions(+)
+
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index bea84b957b04a..a4dca16cf7cd6 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -441,6 +441,9 @@ config KASAN_SHADOW_OFFSET
+ config UNWIND_TABLES
+ 	bool
+ 
++config ARM64_ACTLR_STATE
++	bool
++
+ source "arch/arm64/Kconfig.platforms"
+ 
+ menu "Kernel Features"
+diff --git a/arch/arm64/include/asm/cpufeature.h b/arch/arm64/include/asm/cpufeature.h
+index 75f838d875934..f4ceff1459162 100644
+--- a/arch/arm64/include/asm/cpufeature.h
++++ b/arch/arm64/include/asm/cpufeature.h
+@@ -953,6 +953,11 @@ static inline unsigned int get_vmid_bits(u64 mmfr1)
+ 	return 8;
+ }
+ 
++static __always_inline bool system_has_actlr_state(void)
++{
++	return false;
++}
++
+ s64 arm64_ftr_safe_value(const struct arm64_ftr_bits *ftrp, s64 new, s64 cur);
+ struct arm64_ftr_reg *get_arm64_ftr_reg(u32 sys_id);
+ 
+diff --git a/arch/arm64/include/asm/processor.h b/arch/arm64/include/asm/processor.h
+index 61d62bfd5a7bf..a8dad2c6788c3 100644
+--- a/arch/arm64/include/asm/processor.h
++++ b/arch/arm64/include/asm/processor.h
+@@ -194,6 +194,9 @@ struct thread_struct {
+ 	u64			gcs_base;
+ 	u64			gcs_size;
+ #endif
++#ifdef CONFIG_ARM64_ACTLR_STATE
++	u64			actlr;
++#endif
+ };
+ 
+ static inline unsigned int thread_get_vl(struct thread_struct *thread,
+diff --git a/arch/arm64/kernel/process.c b/arch/arm64/kernel/process.c
+index 406e424ffb858..f0feb46508c24 100644
+--- a/arch/arm64/kernel/process.c
++++ b/arch/arm64/kernel/process.c
+@@ -442,6 +442,11 @@ int copy_thread(struct task_struct *p, const struct kernel_clone_args *args)
+ 		if (system_supports_poe())
+ 			p->thread.por_el0 = read_sysreg_s(SYS_POR_EL0);
+ 
++#ifdef CONFIG_ARM64_ACTLR_STATE
++		if (system_has_actlr_state())
++			p->thread.actlr = read_sysreg(actlr_el1);
++#endif
++
+ 		if (stack_start) {
+ 			if (is_compat_thread(task_thread_info(p)))
+ 				childregs->compat_sp = stack_start;
+@@ -718,6 +723,25 @@ int arch_prctl_mem_model_set(struct task_struct *t, unsigned long val)
+ }
+ #endif
+ 
++#ifdef CONFIG_ARM64_ACTLR_STATE
++/*
++ * IMPDEF control register ACTLR_EL1 handling. Some CPUs use this to
++ * expose features that can be controlled by userspace.
++ */
++static void actlr_thread_switch(struct task_struct *next)
++{
++	if (!system_has_actlr_state())
++		return;
++
++	current->thread.actlr = read_sysreg(actlr_el1);
++	write_sysreg(next->thread.actlr, actlr_el1);
++}
++#else
++static inline void actlr_thread_switch(struct task_struct *next)
++{
++}
++#endif
++
+ /*
+  * Thread switching.
+  */
+@@ -737,6 +761,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
+ 	ptrauth_thread_switch_user(next);
+ 	permission_overlay_switch(next);
+ 	gcs_thread_switch(next);
++	actlr_thread_switch(next);
+ 
+ 	/*
+ 	 * Complete any pending TLB or cache maintenance on this CPU in case the
+diff --git a/arch/arm64/kernel/setup.c b/arch/arm64/kernel/setup.c
+index 77c7926a4df66..48d91c6ce9a59 100644
+--- a/arch/arm64/kernel/setup.c
++++ b/arch/arm64/kernel/setup.c
+@@ -368,6 +368,14 @@ void __init __no_sanitize_address setup_arch(char **cmdline_p)
+ 	 */
+ 	init_task.thread_info.ttbr0 = phys_to_ttbr(__pa_symbol(reserved_pg_dir));
+ #endif
++#ifdef CONFIG_ARM64_ACTLR_STATE
++	/* Store the boot CPU ACTLR_EL1 value as the default. This will only
++	 * be actually restored during context switching iff the platform is
++	 * known to use ACTLR_EL1 for exposable features and its layout is
++	 * known to be the same on all CPUs.
++	 */
++	init_task.thread.actlr = read_sysreg(actlr_el1);
++#endif
+ 
+ 	if (boot_args[1] || boot_args[2] || boot_args[3]) {
+ 		pr_err("WARNING: x1-x3 nonzero in violation of boot protocol:\n"
+-- 
+2.51.0
+
