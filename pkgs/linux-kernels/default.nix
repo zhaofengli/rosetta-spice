@@ -1,7 +1,6 @@
 {
   lib,
   linuxKernel,
-  recurseIntoAttrs,
 }:
 let
   patchKernel =
@@ -16,7 +15,7 @@ let
     });
 in
 rec {
-  kernels = recurseIntoAttrs {
+  kernels = lib.recurseIntoAttrs {
     linux_6_16_tso = patchKernel {
       original = linuxKernel.kernels.linux_6_16;
       patches = import ./linux_6_16_tso/patches.nix;
@@ -26,5 +25,5 @@ rec {
       patches = import ./linux_6_17_tso/patches.nix;
     };
   };
-  packages = recurseIntoAttrs (lib.mapAttrs (k: linuxKernel.packagesFor) kernels);
+  packages = lib.recurseIntoAttrs (lib.mapAttrs (k: linuxKernel.packagesFor) kernels);
 }

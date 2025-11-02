@@ -1,8 +1,8 @@
 self: super:
 let
-  inherit (self) callPackage recurseIntoAttrs;
+  inherit (self) lib callPackage;
 in {
-  rosetta-spice-extras = recurseIntoAttrs rec {
-    linuxKernel = recurseIntoAttrs (callPackage ./linux-kernels { });
+  rosetta-spice-extras = lib.recurseIntoAttrs rec {
+    linuxKernel = lib.recurseIntoAttrs (callPackage ./linux-kernels { });
   };
 }
