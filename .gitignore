@@ -10,7 +10,8 @@ result*
 *~
 *.swp
 
-
+*.pkg
+*.sucatalog
 
 # Added by cargo
 
