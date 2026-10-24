@@ -11,7 +11,14 @@ let
         ++ map (patch: {
           name = builtins.baseNameOf patch;
           inherit patch;
-        }) patches;
+        }) patches
+        ++ [
+          {
+            name = "tso-config";
+            patch = null;
+            structuredExtraConfig.ARM64_MEMORY_MODEL_CONTROL = lib.kernel.yes;
+          }
+        ];
     });
 in
 rec {
@@ -23,6 +30,10 @@ rec {
     linux_6_17_tso = patchKernel {
       original = linuxKernel.kernels.linux_6_17;
       patches = import ./linux_6_17_tso/patches.nix;
+    };
+    linux_6_18_tso = patchKernel {
+      original = linuxKernel.kernels.linux_6_18;
+      patches = import ./linux_6_18_tso/patches.nix;
     };
   };
   packages = lib.recurseIntoAttrs (lib.mapAttrs (k: linuxKernel.packagesFor) kernels);
