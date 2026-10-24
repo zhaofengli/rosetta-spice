@@ -2,11 +2,11 @@
 let
   # https://swscan.apple.com/content/catalogs/others/index-rosettaupdateauto-1.sucatalog.gz
 
-  # Tahoe 26.0 RC
-  version = "25A353";
+  # Tahoe 26.7.2
+  version = "25G330";
   src = fetchurl {
-    url = "https://swcdn.apple.com/content/downloads/61/63/093-37146-A_S9OR0EVSU7/85gm90bhzh16fd705jb6sjc3unnywcu7xv/RosettaUpdateAuto.pkg";
-    hash = "sha256-vNKVnLIZmxGhaCQk3CRvcu8i22QawSbMlcUfiFx33Xk=";
+    url = "https://swcdn.apple.com/content/downloads/13/21/142-43923-A_EPTPMZZQAI/x2z47nvhykk47sl3qs7iam3bmv5l2rflu6/RosettaUpdateAuto.pkg";
+    hash = "sha256-6ampDfe+MI/tMtp3kM5yt2GrvSzMmltne4CtElv/wI0=";
   };
 
   drv = stdenv.mkDerivation {
