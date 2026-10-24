@@ -14,7 +14,6 @@ use plain::Plain;
 
 const EH_LEN: usize = 0x40;
 const IOCTL_BIN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/ioctl.bin"));
-const MMAP_BIN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/mmap.bin"));
 
 const SVR_0: &[u8] = &[0x01, 0x00, 0x00, 0xd4];
 
@@ -159,28 +158,14 @@ fn patch_rosetta(src: &mut File, dst: &mut File) -> AnyResult<()> {
     while let Some((idx, instruction)) = iter.next() {
         let offset = EH_LEN + ph_len + idx * 4;
 
-        match instruction {
-            // mov x8, __NR_ioctl
-            [0xa8, 0x03, 0x80, 0xd2] => {
-                if let Some((_, SVR_0)) = iter.next() {
-                    eprintln!("🪝 Hooking sys_ioctl");
-                    if let Some(patch) = try_patch(offset, IOCTL_BIN)? {
-                        patches.push(patch);
-                    }
+        // mov x8, __NR_ioctl
+        if let [0xa8, 0x03, 0x80, 0xd2] = instruction {
+            if let Some((_, SVR_0)) = iter.next() {
+                eprintln!("🪝 Hooking sys_ioctl");
+                if let Some(patch) = try_patch(offset, IOCTL_BIN)? {
+                    patches.push(patch);
                 }
             }
-
-            // mov x8, __NR_mmap
-            [0xc8, 0x1b, 0x80, 0xd2] => {
-                if let Some((_, SVR_0)) = iter.next() {
-                    eprintln!("🪝 Hooking sys_mmap");
-                    if let Some(patch) = try_patch(offset, MMAP_BIN)? {
-                        patches.push(patch);
-                    }
-                }
-            }
-
-            _ => {}
         }
     }
 
